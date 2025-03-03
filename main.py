@@ -72,6 +72,8 @@ async def checkCustomCommands(message, prefix):
     await message.channel.purge(limit = 1)
   if content == 'reset':
     client.lastUser = ' '  
+  if content == 'github':
+    await message.channel.send('https://github.com/Hubrecht1/DiscordBot-2025')
       
 
 async def AIChat(messageInfo):
