@@ -18,7 +18,7 @@ prefix = '!'
 
 class Client(discord.Client):
   async def on_ready(self):
-    formatted_time = time.strftime("%Y-%m-%d %H:%M", time.localtime())
+    formatted_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
     print(f'{formatted_time} SUCCESS: Logged on as {self.user}.')
     await changStatus()
     channel = client.get_channel(895354381921304576)
