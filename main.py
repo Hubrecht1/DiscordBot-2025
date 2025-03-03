@@ -4,13 +4,18 @@ from ollama import chat
 from ollama import AsyncClient
 from ollama import ChatResponse
 import discord
+from discord.ext import commands
 import random
 import subprocess
 import os
 from dotenv import dotenv_values
+import string
 
+#init:
 greets = ["Hey", "Hello", "Hi", "Yo", "Howdy", "What's up", "Hiya", "Hey there", "Sup", "Greetings", "hoi", "moi", "fakka", "hallo", "goede", "!", "greet", "greetbot"]
 OllamaModel = 'llama3.2'
+prefix = '!'
+
 class Client(discord.Client):
   async def on_ready(self):
     formatted_time = time.strftime("%Y-%m-%d %H:%M", time.localtime())
@@ -23,7 +28,9 @@ class Client(discord.Client):
     if message.author == self.user:
       return
     userMessage = message.content.lower().split()
-    await checkCustomCommands(message)
+    if message.content.startswith(prefix):
+      await checkCustomCommands(message, prefix)
+      return
 
     if any(greet.lower() == word for word in userMessage for greet in greets) == False:
       return
@@ -40,17 +47,20 @@ async def changStatus():
   newActivity = greets[random.randrange(len(greets)-1)]
   await client.change_presence(activity = discord.CustomActivity(name = newActivity))
 
-async def checkCustomCommands(message):
-  if message.content == 'Restart':
+async def checkCustomCommands(message, prefix):
+  content = message.content.removeprefix(prefix)
+
+  if content == 'Restart':
     await message.channel.send('Shutting down...')
     subprocess.run('python3 main.py', shell=True)
     await client.close()
 
-  if message.content == 'Shutdown':
+  if content == 'Shutdown':
     await message.channel.send('Shutting down...')
     await client.close()
 
-  if message.content == 'Change status':
+  if content == 'Change status':
+    await changStatus()
     await message.channel.send(f'Setting new status')
 
 async def deepSeekChat(content, messageInfo):
