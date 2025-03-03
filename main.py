@@ -13,7 +13,7 @@ import string
 
 #init:
 greets = ["Hey", "Hello", "Hi", "Yo", "Howdy", "What's up", "Hiya", "Hey there", "Sup", "Greetings", "hoi", "moi", "fakka", "hallo", "goede", "!", "greet", "greetbot"]
-farewells = ["farewell", "bye", "doei", "fuck off", "go away", "ga weg", "later", "tot ziens", "farewell", "goodbye", "fuck off", "shut up"]
+farewells = ["farewell", "bye", "doei", "fuckoff", "go away", "ga weg", "later", "totziens", "farewell", "goodbye", "shutup"]
 
 AIModel = 'llama3.2'
 prefix = '!'
@@ -102,7 +102,7 @@ async def AIChat(messageInfo):
 async def getUserContext(message):
   userPrompt = message.content.lower().split()
   if(findWordsInMessage(farewells, userPrompt)):
-   context = f'{message.author.name} says bye: '
+   context = f'{message.author.name} says bye(you should say goodby or somthing): '
    client.lastUser = ''
   else :
     context = f'{message.author.name}: '
