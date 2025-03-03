@@ -13,10 +13,13 @@ import string
 
 #init:
 greets = ["Hey", "Hello", "Hi", "Yo", "Howdy", "What's up", "Hiya", "Hey there", "Sup", "Greetings", "hoi", "moi", "fakka", "hallo", "goede", "!", "greet", "greetbot"]
-OllamaModel = 'llama3.2'
+farewells = ["farewell", "bye", "doei", "fuck off", "go away", "ga weg", "later", "tot ziens", "farewell", "goodbye", "fuck off", "shut up"]
+
+AIModel = 'llama3.2'
 prefix = '!'
 
 class Client(discord.Client):
+  lastUser = ''
   async def on_ready(self):
     formatted_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
     print(f'{formatted_time} SUCCESS: Logged on as {self.user}.')
@@ -27,21 +30,24 @@ class Client(discord.Client):
   async def on_message(self,message):
     if message.author == self.user:
       return
-    userMessage = message.content.lower().split()
     if message.content.startswith(prefix):
       await checkCustomCommands(message, prefix)
       return
 
-    if any(greet.lower() == word for word in userMessage for greet in greets) == False:
+    userMessage = message.content.lower().split()
+    if findWordsInMessage(greets, userMessage) == False and self.lastUser != message.author.name:
       return
     try:
       loop = asyncio.get_running_loop()
     except RuntimeError:
      loop = None
     if loop and loop.is_running():
-      task = asyncio.create_task(deepSeekChat(message.content, message))
+      asyncio.create_task(AIChat(message))
     else:
-      asyncio.run(deepSeekChat(message.content, message)) # Safe to run normally
+      asyncio.run(AIChat(message)) # Safe to run normally
+
+def findWordsInMessage(words, message):
+  return (any (normalWord.lower() == word for word in message for normalWord in words))
 
 async def changStatus():
   newActivity = greets[random.randrange(len(greets)-1)]
@@ -49,32 +55,39 @@ async def changStatus():
 
 async def checkCustomCommands(message, prefix):
   content = message.content.removeprefix(prefix)
-
-  if content == 'Restart':
+  content = content.lower()
+  if content == 'restart':
     await message.channel.send('Shutting down...')
     subprocess.run('python3 main.py', shell=True)
     await client.close()
 
-  if content == 'Shutdown':
+  if content == 'shutdown':
     await message.channel.send('Shutting down...')
     await client.close()
 
-  if content == 'Change status':
+  if content == 'change status':
     await changStatus()
     await message.channel.send(f'Setting new status')
+  if content == 'clear':
+    await message.channel.purge(limit = 1)
+  if content == 'reset':
+    client.lastUser = ' '  
+      
 
-async def deepSeekChat(content, messageInfo):
+async def AIChat(messageInfo):
+  userPrompt = await getUserContext(messageInfo)
+  userPrompt += messageInfo.content
+
   fullResponse = ''
   stream = chat(
-    model=OllamaModel,
-    messages=[{'role': 'user', 'content': content}],
+    model=AIModel,
+    messages=[{'role': 'user', 'content': userPrompt}],
     stream=True,)
   i = 0
   async with messageInfo.channel.typing():
-
     for chunk in stream:
      i += len(chunk.message.content)
-     if i >= 2000:
+     if i >= 1700:
         break
      fullResponse += chunk.message.content
 
@@ -86,6 +99,15 @@ async def deepSeekChat(content, messageInfo):
   else:
     await messageInfo.channel.send(fullResponse)
 
+async def getUserContext(message):
+  userPrompt = message.content.lower().split()
+  if(findWordsInMessage(farewells, userPrompt)):
+   context = f'{message.author.name} says bye: '
+   client.lastUser = ''
+  else :
+    context = f'{message.author.name}: '
+    client.lastUser = message.author.name
+  return context
 
 #agreement or somthing
 _intents = discord.Intents.default()
