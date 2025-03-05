@@ -24,11 +24,11 @@ secrets = dotenv_values(".env")
 class Client(discord.Client):
   lastUser = ''
   prevResponse = ''
-  async def on_ready(self):    
+  async def on_ready(self):
     channel = client.get_channel(895354381921304576)
     await init(self = self)
     await channel.send("Greet bot is online!")
-    await asyncio.sleep(5)
+    await asyncio.sleep(8)
     await changStatus()
 
   async def on_message(self,message):
@@ -40,6 +40,7 @@ class Client(discord.Client):
 
     userMessage = message.content.lower().split()
     if findWordsInMessage(greets, userMessage) == False and self.lastUser != message.author.name:
+      client.lastUser = ''
       return
     try:
       loop = asyncio.get_running_loop()
@@ -71,7 +72,6 @@ async def checkCustomCommands(message, prefix):
     await message.channel.send('Shutting down...')
     await client.close()
     os.system('killall Ollama')
-    asyncio.sleep(3)
     subprocess.run('python3 main.py', shell=True)
   elif content == 'shutdown':
     await message.channel.send('Shutting down...')
@@ -83,7 +83,7 @@ async def checkCustomCommands(message, prefix):
   elif content == 'clear':
     await message.channel.purge(limit = 1 + 1)
   elif content == 'reset':
-    client.lastUser = ''  
+    client.lastUser = ''
     client.prevResponse = ''
   elif content == 'github':
     await message.channel.send('https://github.com/Hubrecht1/DiscordBot-2025')
@@ -111,7 +111,7 @@ async def AIChat(messageInfo):
         break
      fullResponse += chunk.message.content
 
-  print(f"{ChatModel}: {fullResponse}")
+  print(f"...\n{ChatModel}: {fullResponse}\n...")
   if(i >= 2000):
     fullResponse += '...'
     await messageInfo.channel.send(fullResponse)
