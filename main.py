@@ -90,7 +90,10 @@ async def checkCustomCommands(message, prefix):
   elif content == 'code':
     file = discord.File(fp=secrets['codefilePath'])
     await message.channel.send(file=file)
-
+  elif content == 'push':
+    os.system(f'cd {secrets['repPath']} && git commit -a -m "Commited by {message.author.name} via discord" && git push')
+  elif content == 'ping':
+    await message.channel.send("pong")
 async def AIChat(messageInfo):
   userPrompt = ''
   userPrompt += (await getUserContext(messageInfo))
