@@ -95,6 +95,7 @@ async def checkCustomCommands(message, prefix):
     await message.channel.send(f"Exit code {exit_code}")
   elif content == 'ping':
     await message.channel.send("pong")
+
 async def AIChat(messageInfo):
   userPrompt = ''
   userPrompt += (await getUserContext(messageInfo))
