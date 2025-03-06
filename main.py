@@ -88,8 +88,8 @@ async def checkCustomCommands(message, prefix):
   elif content == 'github':
     await message.channel.send('https://github.com/Hubrecht1/DiscordBot-2025')
   elif content == 'code':
-    file = discord.File(fp=secrets['codefilePath'])
-    await message.channel.send(file=file)
+    _file = discord.File(fp=secrets["codefilePath"])
+    await message.channel.send(file=_file)
   elif content == 'push':
     exit_code = os.system(f'cd {secrets["repPath"]} && git commit -a -m "Commited by {message.author.name} via discord" && git push')
     await message.channel.send(f"Exit code {exit_code}")
