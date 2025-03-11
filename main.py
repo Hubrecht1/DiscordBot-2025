@@ -60,7 +60,6 @@ def findWordsInMessage(words, message):
   return (any (normalWord.lower() == word for word in message for normalWord in words))
 
 async def changStatus():
-  #newActivity = greets[random.randrange(len(greets)-1)]
   randInt = random.randint(1,5)
   response = asyncio.run(getAIResponse(f"Make up a discord status, max {randInt} words!"))
   await client.change_presence(activity = discord.CustomActivity(name = response))
@@ -68,35 +67,42 @@ async def changStatus():
 async def checkCustomCommands(message, prefix):
   content = message.content.removeprefix(prefix)
   content = content.lower()
-  if content == 'restart':
+  content = content.split()
+  if content[0] == 'restart':
     await message.channel.send('Shutting down...')
     await client.close()
     os.system('killall Ollama')
     subprocess.run('python3 main.py', shell=True)
-  elif content == 'shutdown':
+  elif content[0]  == 'shutdown':
     await message.channel.send('Shutting down...')
     os.system('killall Ollama')
     await client.close()
-  elif content == 'change status':
-    await changStatus()
+  elif content[0] == 'change' and content[1] == 'status':
+    if len(content) >= 3:
+      customStatus = ' '
+      for x in range(2,len(content)):
+        customStatus += content[x]
+      await client.change_presence(activity = discord.CustomActivity(name = asyncio.run(getAIResponse(customStatus))))
+    else:
+      await changStatus()
     await message.channel.send(f'Setting new status')
-  elif content == 'clear':
+  elif content[0]  == 'clear':
     await message.channel.purge(limit = 1 + 1)
-  elif content == 'reset':
+  elif content[0] == 'reset':
     client.lastUser = ''
     client.prevResponse = ''
-  elif content == 'github':
+  elif content[0] == 'github':
     await message.channel.send('https://github.com/Hubrecht1/DiscordBot-2025')
-  elif content == 'code':
+  elif content[0] == 'code':
     _file = discord.File(fp=secrets["codefilePath"])
     await message.channel.send(file=_file)
-  elif content == 'push':
+  elif content[0] == 'push':
     exit_code = os.system(f'cd {secrets["repPath"]} && git commit -a -m "Commited by {message.author.name} via discord" && git push')
     await message.channel.send(f"Exit code {exit_code}")
-  elif content == 'ping':
+  elif content[0] == 'ping':
     await message.channel.send("pong")
-  elif content == 'friend':
-    await message.author.send(asyncio.run(getAIResponse(f"{message.author.name} wants to be your friend")))  
+  elif content[0] == 'friend':
+    await message.author.send(asyncio.run(getAIResponse(f"{message.author.name} wants to be your friend")))
 
 async def AIChat(messageInfo):
   userPrompt = ''
@@ -112,17 +118,19 @@ async def AIChat(messageInfo):
     stream=True,)
   i = 0
   async with messageInfo.channel.typing():
+    print(f"...\n{ChatModel}:")
     for chunk in stream:
-     i += len(chunk.message.content)
-     if i >= 1700:
-        break
-     fullResponse += chunk.message.content
-
-  print(f"...\n{ChatModel}: {fullResponse}\n...")
-  if(i >= 2000):
+      i += len(chunk.message.content)
+      if i >= 1700:
+         break
+      fullResponse += chunk.message.content
+      print(chunk['message']['content'], end='', flush=True)
+  print("\nDONE")
+  if(i >= 1700):
     fullResponse += '...'
     await messageInfo.channel.send(fullResponse)
     await messageInfo.channel.send('(greetbots reactie was iets te lang)')
+    print("\nexceeded word limit")
   else:
     await messageInfo.channel.send(fullResponse)
 
