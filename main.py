@@ -143,7 +143,9 @@ async def getAIResponse(message):
     messages=[{'role': 'user', 'content': message}],
     stream=True,)
   for chunk in stream:
+    print(chunk['message']['content'], end='', flush=True)
     fullResponse += chunk.message.content
+  print("\nDONE")
   return fullResponse
 
 async def getUserContext(message):
