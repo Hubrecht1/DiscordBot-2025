@@ -37,6 +37,8 @@ class Client(discord.Client):
     if message.content.startswith(prefix):
       await checkCustomCommands(message, prefix)
       return
+    # checks wurm
+    await checkSpecialCase(message)
 
     userMessage = message.content.lower().split()
     if findWordsInMessage(greets, userMessage) == False and self.lastUser != message.author.name:
@@ -58,6 +60,13 @@ async def init(self):
 
 def findWordsInMessage(words, message):
   return (any (normalWord.lower() == word for word in message for normalWord in words))
+
+async def checkSpecialCase(message):
+  words = ["breaking", "saul", "walter", "finger"]
+  if message.author.id == 504740278855401482 and any(word in message.content for word in words):
+      print(message.content)
+      await message.channel.purge(limit = 1)
+      await message.author.send(message.content + "please stop spamming wurmwillem, the gifs arent funny and they are very offensive")
 
 async def changStatus():
   randInt = random.randint(1,5)
