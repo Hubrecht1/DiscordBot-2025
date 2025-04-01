@@ -1,30 +1,24 @@
-import json
-
-
-
+from ics import Calendar
+from datetime import datetime, timedelta
 
 class rooster:
-  def openRooster():
-    with open("rooster.py", "r") as f:
-      data = json.load(f)
+  def openRooster(file_path):
+    with open(file_path, "r", encoding="utf-8") as file:
+      rooster = Calendar(file.read())
+      return rooster
 
-  def writeRooster():
-    with open("rooster.py", "w") as f:
-      data = json.dump(data, f)
+  # 0 = today, 1 = tomorrow...
+  def printEvents(rooster,day):
+    date = datetime.today().date() + timedelta(days=day)
+    events = [event for event in rooster.events if event.begin.date() == date]
+    if events:
+      print(f"Events for {date.strftime('%B %A')}:")
+      for event in events:
+        print(f"{event.name} from {event.begin.strftime('%H:%M')} to {event.end.strftime('%H:%M')}")
+        print(f"at {event.location}")
+    else:
+      print("No events scheduled.")
 
-class day:
-  events = []
-  def __new__(dayName):
-    instance = day.__new__(dayName)
-    return instance
-
-  def addEvent(event):
-    self.events.append(event)
-
-  def getEventList():
-    return events
-
-class event:
-  def __new__(eventName, eventInfo, eventLocation, color, start, end):
-    instance = event.__new__(eventName ,eventInfo ,eventLocation , color, start ,end )
-    return instance
+roost = rooster()
+newRooster = rooster.openRooster("/Users/macpro/Documents/random projects/DiscordBot 2025/rooster.ics")
+rooster.printEvents(newRooster, 3)

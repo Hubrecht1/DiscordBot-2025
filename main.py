@@ -1,8 +1,7 @@
 import asyncio
 import time
 from ollama import chat
-from ollama import AsyncClient
-from ollama import ChatResponse
+from datetime import datetime, timedelta
 import discord
 from discord.ext import commands
 import random
@@ -12,6 +11,7 @@ from dotenv import dotenv_values
 import string
 import nest_asyncio
 nest_asyncio.apply()
+import rooster
 
 #init:
 greets = ["Hey", "Hello", "Hi", "Yo", "Howdy", "What's up", "Hiya", "Hey there", "Sup", "Greetings", "hoi", "moi", "fakka", "hallo", "goede", "!", "greet", "greetbot", "hoi,"]
@@ -112,6 +112,15 @@ async def checkCustomCommands(message, prefix):
     await message.channel.send("pong")
   elif content[0] == 'friend':
     await message.author.send(asyncio.run(getAIResponse(f"{message.author.name} wants to be your friend")))
+  elif content[0] == 'rooster':
+    newRooster = rooster.rooster.openRooster(secrets["roosterfilePath"])
+    date = datetime.today().date() + timedelta(days=0)
+    #sets date if optional parameter is used
+    if len(content) >= 2:
+      date = datetime.today().date() + timedelta(days=int(content[1]))
+    events = [event for event in newRooster.events if event.begin.date() == date]
+    for event in events:
+      await sendEvent(message.channel, event)
 
 async def AIChat(messageInfo):
   userPrompt = ''
@@ -170,6 +179,13 @@ async def getUserContext(message):
     context += f'\n{message.author.name} says: '
     client.lastUser = message.author.name
   return context
+
+async def sendEvent(channel, icsEvent):
+    embed = discord.Embed(title= icsEvent.name, description=f"{icsEvent.begin.strftime('%H:%M')} - {icsEvent.end.strftime('%H:%M')}", color=discord.Color.green())
+    embed.set_footer(text= icsEvent.location)
+    poll_message = await channel.send(embed=embed)
+    await poll_message.add_reaction("✅")
+    await poll_message.add_reaction("❌")
 
 #agreement or somthing
 _intents = discord.Intents.default()
