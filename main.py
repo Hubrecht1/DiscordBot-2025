@@ -38,7 +38,7 @@ class Client(discord.Client):
       await checkCustomCommands(message, prefix)
       return
     # checks wurm
-    await checkSpecialCase(message)
+    #await checkSpecialCase(message)
 
     userMessage = message.content.lower().split()
     if findWordsInMessage(greets, userMessage) == False and self.lastUser != message.author.name:
