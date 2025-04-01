@@ -196,7 +196,7 @@ async def sendEvents(channel, events, date):
 
 async def sendWeekEvents(channel, icsCalendar, startDate):
   week_later = startDate + timedelta(days=7)
-  unique_days = sorted(set(event.begin.date() for event in icsCalendar.events if startDate <= event.begin.date() <= week_later))
+  unique_days = sorted(set(event.begin.date() for event in icsCalendar.events if startDate <= event.begin.date() < week_later))
   # Loop through events in the next week
   for day in unique_days:
     events = sorted([event for event in icsCalendar.events if event.begin.date() == day],key=lambda e: e.begin)
