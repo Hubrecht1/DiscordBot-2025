@@ -120,7 +120,7 @@ async def checkCustomCommands(message, prefix):
       date = datetime.today().date() + timedelta(days=int(content[1]))
     events = [event for event in newRooster.events if event.begin.date() == date]
     for event in events:
-      await sendEvent(message.channel, event)
+      await sendEvent(message.channel, event, date)
 
 async def AIChat(messageInfo):
   userPrompt = ''
@@ -180,8 +180,8 @@ async def getUserContext(message):
     client.lastUser = message.author.name
   return context
 
-async def sendEvent(channel, icsEvent):
-    embed = discord.Embed(title= icsEvent.name, description=f"{icsEvent.begin.strftime('%H:%M')} - {icsEvent.end.strftime('%H:%M')}", color=discord.Color.green())
+async def sendEvent(channel, icsEvent, date):
+    embed = discord.Embed(title= icsEvent.name, description=f"{icsEvent.begin.strftime('%H:%M')} - {icsEvent.end.strftime('%H:%M')},  {date.strftime('%A %-d %B')}", color=discord.Color.green())
     embed.set_footer(text= icsEvent.location)
     poll_message = await channel.send(embed=embed)
     await poll_message.add_reaction("✅")
