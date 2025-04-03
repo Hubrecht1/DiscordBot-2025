@@ -12,6 +12,7 @@ import string
 import nest_asyncio
 nest_asyncio.apply()
 import rooster
+import requests
 
 #init:
 greets = ["Hey", "Hello", "Hi", "Yo", "Howdy", "What's up", "Hiya", "Hey there", "Sup", "Greetings", "hoi", "moi", "fakka", "hallo", "goede", "!", "greet", "greetbot", "hoi,"]
@@ -119,14 +120,19 @@ async def checkCustomCommands(message, prefix):
     if len(content) >= 2:
       date = datetime.today().date() + timedelta(days=int(content[1]))
     events = [event for event in newRooster.events if event.begin.date() == date]
-    await sendEvents(message.channel, events, date)
+    #create discord event:
+    if len(content) >= 3 and content[2] == 'event':
+      createEvents(message, events)
+    #send discord embeds:
+    else:
+      await sendEvents(message, events, date)
   elif content[0] == 'roosterweek':
     newRooster = rooster.rooster.openRooster(secrets["roosterfilePath"])
     date = datetime.today().date() + timedelta(days=0)
     #sets date if optional parameter is used
     if len(content) >= 2:
       date = datetime.today().date() + timedelta(days=int(content[1]))
-    await sendWeekEvents(message.channel, newRooster, date)
+    await sendWeekEvents(message, newRooster, date)
 
 async def AIChat(messageInfo):
   userPrompt = ''
@@ -186,27 +192,52 @@ async def getUserContext(message):
     client.lastUser = message.author.name
   return context
 
-async def sendEvents(channel, events, date):
+async def sendEvents(message, events, date):
   for icsEvent in events:
     embed = discord.Embed(title= icsEvent.name, description=f"{icsEvent.begin.strftime('%H:%M')} - {icsEvent.end.strftime('%H:%M')},  {date.strftime('%A %-d %B')}", color=discord.Color.green())
     embed.set_footer(text= icsEvent.location)
-    poll_message = await channel.send(embed=embed)
+    poll_message = await message.channel.send(embed=embed)
     await poll_message.add_reaction("✅")
     await poll_message.add_reaction("❌")
 
-async def sendWeekEvents(channel, icsCalendar, startDate):
+def createEvents(message, events: list):
+  for icsEvent in events:
+     createEvent(message, icsEvent)
+
+async def sendWeekEvents(message, icsCalendar, startDate):
   week_later = startDate + timedelta(days=7)
   unique_days = sorted(set(event.begin.date() for event in icsCalendar.events if startDate <= event.begin.date() < week_later))
   # Loop through events in the next week
   for day in unique_days:
     events = sorted([event for event in icsCalendar.events if event.begin.date() == day],key=lambda e: e.begin)
-    await sendEventsCompact(channel, events, day)
+    await sendEventsCompact(message, events, day)
 
-async def sendEventsCompact(channel, events, date):
+async def sendEventsCompact(message, events, date):
   embed = discord.Embed(title= date.strftime('%A %-d %B') , color=discord.Color.green())
   for icsEvent in events:
     embed.add_field(name= f"{icsEvent.name} {icsEvent.begin.strftime('%H:%M')} - {icsEvent.end.strftime('%H:%M')}", value=icsEvent.location, inline=False)
-  await channel.send(embed=embed)
+  await message.channel.send(embed=embed)
+
+def createEvent(message, event):
+  url = f"https://discord.com/api/v10/guilds/{message.guild.id}/scheduled-events"
+  headers = {
+    "Authorization": f"Bot {secrets["discordBotToken"]}",
+    "Content-Type": "application/json"
+  }
+
+  payload = {
+    "name": event.name,
+    "description": f"{event.name}\n {event.begin.strftime('%H:%M')} - {event.end.strftime('%H:%M')}",
+    "scheduled_start_time": event.begin.isoformat(),  # UTC format
+    "scheduled_end_time": event.end.isoformat(),
+    "privacy_level": 2,  # 2 = GUILD_ONLY
+    "entity_type": 3,  # 3 = External Event
+    "entity_metadata": {
+        "location": event.location
+    }
+  }
+  response = requests.post(url, json=payload, headers=headers)
+  print(response.status_code)
 
 #agreement or somthing
 _intents = discord.Intents.default()
