@@ -13,6 +13,7 @@ import nest_asyncio
 nest_asyncio.apply()
 import rooster
 import requests
+import pytz
 
 #init:
 greets = ["Hey", "Hello", "Hi", "Yo", "Howdy", "What's up", "Hiya", "Hey there", "Sup", "Greetings", "hoi", "moi", "fakka", "hallo", "goede", "!", "greet", "greetbot", "hoi,"]
@@ -21,10 +22,14 @@ farewells = ["farewell", "bye", "doei", "fuckoff", "go away", "ga weg", "later",
 ChatModel = 'llama3.2'
 prefix = '!'
 secrets = dotenv_values(".env")
+currentRooster = rooster.rooster.openRooster(secrets["roosterfilePath"])
+local_tz = pytz.timezone("Europe/Amsterdam")
+
 
 class Client(discord.Client):
   lastUser = ''
   prevResponse = ''
+
   async def on_ready(self):
     channel = client.get_channel(895354381921304576)
     await init(self = self)
@@ -57,6 +62,7 @@ class Client(discord.Client):
 async def init(self):
   formatted_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
   os.system('open /Applications/Ollama.app')
+
   print(f'{formatted_time} SUCCESS: Logged on as {self.user}.')
 
 def findWordsInMessage(words, message):
@@ -113,13 +119,21 @@ async def checkCustomCommands(message, prefix):
     await message.channel.send("pong")
   elif content[0] == 'friend':
     await message.author.send(asyncio.run(getAIResponse(f"{message.author.name} wants to be your friend")))
+  elif content[0] == 'weather':
+    if(len(content) == 1):
+      await message.channel.send("Input city")
+    else:
+      city = ''
+      for x in range(1,len(content)):
+        city += ' ' + content[x]
+      async with message.channel.typing():
+       await message.channel.send(getWeather(city))
   elif content[0] == 'rooster':
-    newRooster = rooster.rooster.openRooster(secrets["roosterfilePath"])
     date = datetime.today().date() + timedelta(days=0)
     #sets date if optional parameter is used
     if len(content) >= 2:
       date = datetime.today().date() + timedelta(days=int(content[1]))
-    events = [event for event in newRooster.events if event.begin.date() == date]
+    events = [event for event in currentRooster.events if event.begin.date() == date]
     #create discord event:
     if len(content) >= 3 and content[2] == 'event':
       createEvents(message, events)
@@ -127,12 +141,12 @@ async def checkCustomCommands(message, prefix):
     else:
       await sendEvents(message, events, date)
   elif content[0] == 'roosterweek':
-    newRooster = rooster.rooster.openRooster(secrets["roosterfilePath"])
+
     date = datetime.today().date() + timedelta(days=0)
     #sets date if optional parameter is used
     if len(content) >= 2:
       date = datetime.today().date() + timedelta(days=int(content[1]))
-    await sendWeekEvents(message, newRooster, date)
+    await sendWeekEvents(message, currentRooster, date)
 
 async def AIChat(messageInfo):
   userPrompt = ''
@@ -224,12 +238,11 @@ def createEvent(message, event):
     "Authorization": f"Bot {secrets["discordBotToken"]}",
     "Content-Type": "application/json"
   }
-
   payload = {
     "name": event.name,
     "description": f"{event.name}\n {event.begin.strftime('%H:%M')} - {event.end.strftime('%H:%M')}",
-    "scheduled_start_time": event.begin.isoformat(),  # UTC format
-    "scheduled_end_time": event.end.isoformat(),
+    "scheduled_start_time": event.begin.datetime.isoformat(),  # UTC format
+    "scheduled_end_time": event.end.datetime.isoformat(),
     "privacy_level": 2,  # 2 = GUILD_ONLY
     "entity_type": 3,  # 3 = External Event
     "entity_metadata": {
@@ -237,7 +250,33 @@ def createEvent(message, event):
     }
   }
   response = requests.post(url, json=payload, headers=headers)
-  print(response.status_code)
+  print(response) #debug
+
+def getWeather(city):
+  url = f"https://wttr.in/{city}?format=j1"
+  response = requests.get(url)
+
+  if response.status_code != 200:
+    print(response.status_code)
+    return
+
+  data = response.json()
+  current = data['current_condition'][0]
+
+  weather_info = {
+        "City": city,
+        "Temperature (°C)": current['temp_C'],
+        "Feels Like (°C)": current['FeelsLikeC'],
+        "Weather": current['weatherDesc'][0]['value'],
+        "Humidity (%)": current['humidity'],
+        "Wind (km/h)": f"{current['windspeedKmph']} {current['winddir16Point']}",
+        "Visibility (km)": current['visibility'],
+        "Pressure (mb)": current['pressure'],
+  }
+  weather = ''
+  for key, value in weather_info.items():
+    weather += f"{key}: {value}\n"
+  return (asyncio.run(getAIResponse("You are the weather forecaster (dont introduce yourself)this is the data tell the weather (be very concise)" + weather)))
 
 #agreement or somthing
 _intents = discord.Intents.default()
