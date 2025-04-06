@@ -127,7 +127,7 @@ async def checkCustomCommands(message, prefix):
       for x in range(1,len(content)):
         city += ' ' + content[x]
       async with message.channel.typing():
-       await message.channel.send(getWeather(city))
+        await message.channel.send(getWeather(city))
   elif content[0] == 'rooster':
     date = datetime.today().date() + timedelta(days=0)
     #sets date if optional parameter is used
