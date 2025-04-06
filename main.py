@@ -258,13 +258,15 @@ def getWeather(city):
 
   if response.status_code != 200:
     print(response.status_code)
-    return
+    return asyncio.run(getAIResponse(f"explain that the city:{city} doesn't exist"))
+    #return f"{city} doesn't exist"
 
   data = response.json()
   current = data['current_condition'][0]
-
+  nearest_area = data['nearest_area'][0]
   weather_info = {
-        "City": city,
+        "City": nearest_area['areaName'][0]['value'],
+        "Country":  nearest_area['country'][0]['value'],
         "Temperature (°C)": current['temp_C'],
         "Feels Like (°C)": current['FeelsLikeC'],
         "Weather": current['weatherDesc'][0]['value'],
@@ -276,6 +278,7 @@ def getWeather(city):
   weather = ''
   for key, value in weather_info.items():
     weather += f"{key}: {value}\n"
+  print(weather)
   return (asyncio.run(getAIResponse("You are the weather forecaster (dont introduce yourself)this is the data tell the weather (be very concise)" + weather)))
 
 #agreement or somthing
