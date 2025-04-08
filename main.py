@@ -136,7 +136,7 @@ async def checkCustomCommands(message, prefix):
     events = [event for event in currentRooster.events if event.begin.date() == date]
     #create discord event:
     if len(content) >= 3 and content[2] == 'event':
-      createEvents(message, events)
+      await createEvents(message, events)
     #send discord embeds:
     else:
       await sendEvents(message, events, date)
@@ -146,7 +146,16 @@ async def checkCustomCommands(message, prefix):
     #sets date if optional parameter is used
     if len(content) >= 2:
       date = datetime.today().date() + timedelta(days=int(content[1]))
-    await sendWeekEvents(message, currentRooster, date)
+    #creates events if 'event' is typed
+    if len(content) >= 3 and content[2]== 'event':
+      week_later = date + timedelta(days=7)
+      unique_days = sorted(set(event.begin.date() for event in currentRooster.events if date <= event.begin.date() < week_later))
+      # Loop through events in the next week
+      for day in unique_days:
+       events = sorted([event for event in currentRooster.events if event.begin.date() == day],key=lambda e: e.begin)
+       await createEvents(message ,events)
+    else:
+     await sendWeekEvents(message, currentRooster, date)
 
 async def AIChat(messageInfo):
   userPrompt = ''
@@ -214,9 +223,10 @@ async def sendEvents(message, events, date):
     await poll_message.add_reaction("✅")
     await poll_message.add_reaction("❌")
 
-def createEvents(message, events: list):
+async def createEvents(message, events: list):
   for icsEvent in events:
-     createEvent(message, icsEvent)
+     await createEvent(message, icsEvent)
+     await asyncio.sleep(3)
 
 async def sendWeekEvents(message, icsCalendar, startDate):
   week_later = startDate + timedelta(days=7)
@@ -232,7 +242,12 @@ async def sendEventsCompact(message, events, date):
     embed.add_field(name= f"{icsEvent.name} {icsEvent.begin.strftime('%H:%M')} - {icsEvent.end.strftime('%H:%M')}", value=icsEvent.location, inline=False)
   await message.channel.send(embed=embed)
 
-def createEvent(message, event):
+async def createEvent(message, event):
+
+  # Convert to UTC
+  utc_time = event.begin.datetime.astimezone(pytz.UTC).isoformat()
+  utc_time_end = event.end.datetime.astimezone(pytz.UTC).isoformat()
+
   url = f"https://discord.com/api/v10/guilds/{message.guild.id}/scheduled-events"
   headers = {
     "Authorization": f"Bot {secrets["discordBotToken"]}",
@@ -241,16 +256,32 @@ def createEvent(message, event):
   payload = {
     "name": event.name,
     "description": f"{event.name}\n {event.begin.strftime('%H:%M')} - {event.end.strftime('%H:%M')}",
-    "scheduled_start_time": event.begin.datetime.isoformat(),  # UTC format
-    "scheduled_end_time": event.end.datetime.isoformat(),
+    "scheduled_start_time": utc_time,  # UTC format
+    "scheduled_end_time": utc_time_end,
     "privacy_level": 2,  # 2 = GUILD_ONLY
     "entity_type": 3,  # 3 = External Event
     "entity_metadata": {
         "location": event.location
     }
   }
+  #checks for existing events
+  eventsResponse = requests.get(url, headers=headers)  # GET to fetch all events
+  if eventsResponse.status_code == 200:
+        events = eventsResponse.json()
+        # Check if the event with the same name and time already exists
+        for existing_event in events:
+            # Compare the event start time and name (you can add more checks like location if needed)
+            if existing_event['name'] == event.name and existing_event['scheduled_start_time'] == utc_time:
+                print(f"Event {existing_event['name']} already exists")
+                return
+  else:
+    print(f"eventsResponse error: {eventsResponse}") #debug
+    return
+
   response = requests.post(url, json=payload, headers=headers)
-  print(response) #debug
+  if(response.status_code != 200):
+    await message.channel.send(f"Event {event.name} couldn't be created: {response}")
+  print(f"event creation error: {response}") #debug
 
 def getWeather(city):
   url = f"https://wttr.in/{city}?format=j1"
