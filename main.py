@@ -25,7 +25,6 @@ secrets = dotenv_values(".env")
 currentRooster = rooster.rooster.openRooster(secrets["roosterFilePath"])
 local_tz = pytz.timezone("Europe/Amsterdam")
 
-
 class Client(discord.Client):
   lastUser = ''
   prevResponse = ''
