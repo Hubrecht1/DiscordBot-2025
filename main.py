@@ -113,7 +113,11 @@ async def checkCustomCommands(message, prefix):
     _file = discord.File(fp=secrets["codefilePath"])
     await message.channel.send(file=_file)
   elif content[0] == 'push':
-    exit_code = os.system(f'cd {secrets["repPath"]} && git commit -a -m "Commited by {message.author.name} via discord" && git push')
+    commitInfo = ''
+    if(len(content) > 0):
+      for x in range(1,len(content)):
+        commitInfo += content[x]
+    exit_code = os.system(f'cd {secrets["repPath"]} && git commit -a -m "Commited by {message.author.name} via discord:{commitInfo}" && git push')
     await message.channel.send(f"Exit code {exit_code}")
   elif content[0] == 'ping':
     await message.channel.send("pong")
