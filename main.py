@@ -97,7 +97,7 @@ async def checkCustomCommands(message, prefix):
     if len(content) >= 3:
       customStatus = ' '
       for x in range(2,len(content)):
-        customStatus += content[x]
+        customStatus += f"{content[x]} "
       await client.change_presence(activity = discord.CustomActivity(name = asyncio.run(getAIResponse(customStatus))))
     else:
       await changStatus()
@@ -117,7 +117,7 @@ async def checkCustomCommands(message, prefix):
     if(len(content) > 0):
       for x in range(1,len(content)):
         commitInfo += content[x]
-    exit_code = os.system(f'cd {secrets["repPath"]} && git commit -a -m "Commited by {message.author.name} via discord:{commitInfo}" && git push')
+    exit_code = os.system(f'cd {secrets["repPath"]} && git commit -a -m "Commited by {message.author.name} via discord;{commitInfo}" && git push')
     await message.channel.send(f"Exit code {exit_code}")
   elif content[0] == 'ping':
     await message.channel.send("pong")
