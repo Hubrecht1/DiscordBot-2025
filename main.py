@@ -136,7 +136,8 @@ async def checkCustomCommands(message, prefix):
     events = [event for event in currentRooster.events if event.begin.date() == date]
     #create discord event:
     if len(content) >= 3 and content[2] == 'event':
-      await createEvents(message, events)
+      existingEvents = await getEventsInServer(message.guild)
+      await createEvents(message, events, existingEvents)
     #send discord embeds:
     else:
       await sendEvents(message, events, date)
@@ -150,10 +151,11 @@ async def checkCustomCommands(message, prefix):
     if len(content) >= 3 and content[2]== 'event':
       week_later = date + timedelta(days=7)
       unique_days = sorted(set(event.begin.date() for event in currentRooster.events if date <= event.begin.date() < week_later))
+      existingEvents = await getEventsInServer(message.guild)
       # Loop through events in the next week
       for day in unique_days:
        events = sorted([event for event in currentRooster.events if event.begin.date() == day],key=lambda e: e.begin)
-       await createEvents(message ,events)
+       await createEvents(message ,events, existingEvents)
     else:
      await sendWeekEvents(message, currentRooster, date)
 
@@ -223,9 +225,9 @@ async def sendEvents(message, events, date):
     await poll_message.add_reaction("✅")
     await poll_message.add_reaction("❌")
 
-async def createEvents(message, events: list):
+async def createEvents(message, events: list, existingEvents):
   for icsEvent in events:
-     await createEvent(message, icsEvent)
+     await createEvent(message, icsEvent, existingEvents)
      await asyncio.sleep(3)
 
 async def sendWeekEvents(message, icsCalendar, startDate):
@@ -242,7 +244,7 @@ async def sendEventsCompact(message, events, date):
     embed.add_field(name= f"{icsEvent.name} {icsEvent.begin.strftime('%H:%M')} - {icsEvent.end.strftime('%H:%M')}", value=icsEvent.location, inline=False)
   await message.channel.send(embed=embed)
 
-async def createEvent(message, event):
+async def createEvent(message, event, existingEvents):
 
   # Convert to UTC
   utc_time = event.begin.datetime.astimezone(pytz.UTC).isoformat()
@@ -264,24 +266,36 @@ async def createEvent(message, event):
         "location": event.location
     }
   }
-  #checks for existing events
-  eventsResponse = requests.get(url, headers=headers)  # GET to fetch all events
-  if eventsResponse.status_code == 200:
-        events = eventsResponse.json()
+
+  if existingEvents != None:
         # Check if the event with the same name and time already exists
-        for existing_event in events:
+        for existing_event in existingEvents:
             # Compare the event start time and name (you can add more checks like location if needed)
             if existing_event['name'] == event.name and existing_event['scheduled_start_time'] == utc_time:
                 print(f"Event {existing_event['name']} already exists")
                 return
   else:
-    print(f"eventsResponse error: {eventsResponse}") #debug
     return
 
   response = requests.post(url, json=payload, headers=headers)
   if(response.status_code != 200):
-    await message.channel.send(f"Event {event.name} couldn't be created: {response}")
-  print(f"event creation error: {response}") #debug
+    await message.channel.send(f"Event '{event.name}' couldn't be created: {response}")
+    print(f"ERROR {response} ({event.name} couldn't be posted))") #debug
+
+ # fetch all events, returns json
+async def getEventsInServer(guild):
+  url = f"https://discord.com/api/v10/guilds/{guild.id}/scheduled-events"
+  headers = {
+    "Authorization": f"Bot {secrets["discordBotToken"]}",
+    "Content-Type": "application/json"
+  }
+  #checks for existing events
+  eventsResponse = requests.get(url, headers=headers)  # GET to fetch all events
+  if eventsResponse.status_code == 200:
+    return eventsResponse.json()
+  else:
+    print(f"ERROR {eventsResponse} (Existing events couldn't be fetched.)") #debug
+    return None
 
 def getWeather(city):
   url = f"https://wttr.in/{city}?format=j1"
