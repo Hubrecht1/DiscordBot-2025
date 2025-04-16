@@ -133,7 +133,7 @@ async def checkCustomCommands(message, prefix):
     #sets date if optional parameter is used
     if len(content) >= 2:
       date = datetime.today().date() + timedelta(days=int(content[1]))
-    events = [event for event in currentRooster.events if event.begin.date() == date]
+    events = sorted([event for event in currentRooster.events if event.begin.date() == date],key=lambda e: e.begin)
     #create discord event:
     if len(content) >= 3 and content[2] == 'event':
       existingEvents = await getEventsInServer(message.guild)
