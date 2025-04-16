@@ -18,7 +18,3 @@ class rooster:
         print(f"at {event.location}")
     else:
       print("No events scheduled.")
-
-roost = rooster()
-newRooster = rooster.openRooster("/Users/macpro/Documents/random projects/DiscordBot 2025/rooster.ics")
-rooster.printEvents(newRooster, 3)

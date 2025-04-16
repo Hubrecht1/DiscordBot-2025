@@ -22,7 +22,7 @@ farewells = ["farewell", "bye", "doei", "fuckoff", "go away", "ga weg", "later",
 ChatModel = 'llama3.2'
 prefix = '!'
 secrets = dotenv_values(".env")
-currentRooster = rooster.rooster.openRooster(secrets["roosterfilePath"])
+currentRooster = rooster.rooster.openRooster(secrets["roosterFilePath"])
 local_tz = pytz.timezone("Europe/Amsterdam")
 
 
@@ -252,7 +252,7 @@ async def createEvent(message, event, existingEvents):
 
   url = f"https://discord.com/api/v10/guilds/{message.guild.id}/scheduled-events"
   headers = {
-    "Authorization": f"Bot {secrets["discordBotToken"]}",
+    "Authorization": f"Bot {secrets['discordBotToken']}",
     "Content-Type": "application/json"
   }
   payload = {
