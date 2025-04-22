@@ -8,7 +8,6 @@ import random
 import subprocess
 import os
 from dotenv import dotenv_values
-import string
 import nest_asyncio
 nest_asyncio.apply()
 import rooster
@@ -34,7 +33,7 @@ class Client(discord.Client):
     await init(self = self)
     await channel.send("Greet bot is online!")
     await asyncio.sleep(8)
-    await changStatus()
+    await changStatusAI()
 
   async def on_message(self,message):
     if message.author == self.user:
@@ -74,10 +73,13 @@ async def checkSpecialCase(message):
       await message.channel.purge(limit = 1)
       await message.author.send(message.content + "please stop spamming wurmwillem, the gifs arent funny and they are very offensive")
 
-async def changStatus():
+async def changStatusAI():
   randInt = random.randint(1,5)
   response = asyncio.run(getAIResponse(f"Make up a discord status, max {randInt} words!"))
   await client.change_presence(activity = discord.CustomActivity(name = response))
+
+async def changeStatus(status):
+  await client.change_presence(activity = discord.CustomActivity(name = status))
 
 async def checkCustomCommands(message, prefix):
   content = message.content.removeprefix(prefix)
@@ -99,7 +101,7 @@ async def checkCustomCommands(message, prefix):
         customStatus += f"{content[x]} "
       await client.change_presence(activity = discord.CustomActivity(name = asyncio.run(getAIResponse(customStatus))))
     else:
-      await changStatus()
+      await changStatusAI()
     await message.channel.send(f'Setting new status')
   elif content[0]  == 'clear':
     await message.channel.purge(limit = 1 + 1)
@@ -144,6 +146,7 @@ async def checkCustomCommands(message, prefix):
     #send discord embeds:
     else:
       await sendEvents(message, events, date)
+    changStatusAI()  
   elif content[0] == 'roosterweek':
 
     date = datetime.today().date() + timedelta(days=0)
@@ -161,6 +164,7 @@ async def checkCustomCommands(message, prefix):
        await createEvents(message ,events, existingEvents)
     else:
      await sendWeekEvents(message, currentRooster, date)
+    changStatusAI()  
 
 async def AIChat(messageInfo):
   userPrompt = ''
@@ -248,7 +252,7 @@ async def sendEventsCompact(message, events, date):
   await message.channel.send(embed=embed)
 
 async def createEvent(message, event, existingEvents):
-
+  await changeStatus(f'Processing: {event.name}')
   # Convert to UTC
   utc_time = event.begin.datetime.astimezone(pytz.UTC).isoformat()
   utc_time_end = event.end.datetime.astimezone(pytz.UTC).isoformat()
@@ -289,7 +293,7 @@ async def createEvent(message, event, existingEvents):
 async def getEventsInServer(guild):
   url = f"https://discord.com/api/v10/guilds/{guild.id}/scheduled-events"
   headers = {
-    "Authorization": f"Bot {secrets["discordBotToken"]}",
+    "Authorization": f"Bot {secrets['discordBotToken']}",
     "Content-Type": "application/json"
   }
   #checks for existing events
