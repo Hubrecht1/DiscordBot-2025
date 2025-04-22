@@ -8,7 +8,6 @@ import random
 import subprocess
 import os
 from dotenv import dotenv_values
-import string
 import nest_asyncio
 nest_asyncio.apply()
 import rooster
@@ -32,7 +31,10 @@ class Client(discord.Client):
   async def on_ready(self):
     channel = client.get_channel(895354381921304576)
     await init(self = self)
-    await channel.send("Greet bot is online!")
+    try:
+      await channel.send("Greet bot is online!")
+    except:
+      print("Channel not found")
     await asyncio.sleep(8)
     await changStatus()
 
