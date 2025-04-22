@@ -146,7 +146,7 @@ async def checkCustomCommands(message, prefix):
     #send discord embeds:
     else:
       await sendEvents(message, events, date)
-    changStatusAI()  
+    await changStatusAI()  
   elif content[0] == 'roosterweek':
 
     date = datetime.today().date() + timedelta(days=0)
@@ -164,7 +164,7 @@ async def checkCustomCommands(message, prefix):
        await createEvents(message ,events, existingEvents)
     else:
      await sendWeekEvents(message, currentRooster, date)
-    changStatusAI()  
+    await changStatusAI()  
 
 async def AIChat(messageInfo):
   userPrompt = ''
