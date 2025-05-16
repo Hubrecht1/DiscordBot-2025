@@ -13,10 +13,11 @@ nest_asyncio.apply()
 import rooster
 import requests
 import pytz
+from langdetect import detect
 
 #init:
 greets = ["Hey", "Hello", "Hi", "Yo", "Howdy", "What's up", "Hiya", "Hey there", "Sup", "Greetings", "hoi", "moi", "fakka", "hallo", "goede", "!", "greet", "greetbot", "hoi,"]
-farewells = ["farewell", "bye", "doei", "fuckoff", "go away", "ga weg", "later", "totziens", "farewell", "goodbye", "shutup", "ga", "go", "stfu"]
+farewells = ["farewell", "bye", "doei", "fuckoff", "go away", "ga weg", "later", "totziens", "farewell", "goodbye", "shutup", "ga", "go", "stfu", "shut"]
 
 ChatModel = 'llama3.2'
 prefix = '!'
@@ -27,6 +28,7 @@ local_tz = pytz.timezone("Europe/Amsterdam")
 class Client(discord.Client):
   lastUser = ''
   prevResponse = ''
+  englishCounter = 0
 
   async def on_ready(self):
     channel = client.get_channel(895354381921304576)
@@ -46,6 +48,9 @@ class Client(discord.Client):
       return
     # checks wurm
     #await checkSpecialCase(message)
+
+    if(detect(message.content) == 'en' and len(message.content) > 3):
+      await message.channel.send(await getAIResponse(f"Zeg tegen {message.author.name } dat hij moet stoppen met engels praten en meer nederlands moet praten(houd het kort)"))
 
     userMessage = message.content.lower().split()
     if findWordsInMessage(greets, userMessage) == False and self.lastUser != message.author.name:
@@ -212,6 +217,9 @@ async def getAIResponse(message):
     fullResponse += chunk.message.content
   print("\nDONE")
   return fullResponse
+
+def langDetect(text):
+  print(detect(text))
 
 async def getUserContext(message):
   context = ''
