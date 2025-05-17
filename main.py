@@ -49,7 +49,7 @@ class Client(discord.Client):
     # checks wurm
     #await checkSpecialCase(message)
 
-    if(detect(message.content) == 'en' and len(message.content) > 3):
+    if(detect(message.content) == 'en' and len(message.content.split()) > 2):
       await message.channel.send(await getAIResponse(f"Zeg tegen {message.author.name } dat hij moet stoppen met engels praten en meer nederlands moet praten(houd het kort)"))
 
     userMessage = message.content.lower().split()
