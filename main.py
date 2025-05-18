@@ -50,7 +50,8 @@ class Client(discord.Client):
     #await checkSpecialCase(message)
     language = detect(message.content)
     print(language)
-    if(language  == 'en' and len(message.content.split()) > 2):
+    if(language  == 'en' and len(message.content.split()) > 3):
+      print(message.content)
       await message.channel.send(await getAIResponse(f"Zeg tegen {message.author.name } dat hij moet stoppen met engels praten en meer nederlands moet praten(houd het kort)"))
 
     userMessage = message.content.lower().split()
