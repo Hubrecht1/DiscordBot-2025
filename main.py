@@ -16,7 +16,7 @@ import pytz
 from langdetect import detect
 
 #init:
-greets = ["Hey", "Hello", "Hi", "Yo", "Howdy", "What's up", "Hiya", "Hey there", "Sup", "Greetings", "hoi", "moi", "fakka", "hallo", "goede", "!", "greet", "greetbot", "hoi,"]
+greets = ["Hey", "Hello", "Hi", "Yo", "Howdy", "What's up", "Hiya", "Hey there", "Sup", "Greetings", "hoi", "moi", "fakka", "hallo", "!", "greet", "greetbot", "hoi,"]
 farewells = ["farewell", "bye", "doei", "fuckoff", "go away", "ga weg", "later", "totziens", "farewell", "goodbye", "shutup", "ga", "go", "stfu", "shut"]
 
 ChatModel = 'llama3.2'
@@ -48,8 +48,9 @@ class Client(discord.Client):
       return
     # checks wurm
     #await checkSpecialCase(message)
-
-    if(detect(message.content) == 'en' and len(message.content.split()) > 2):
+    language = detect(message.content)
+    print(language)
+    if(language  == 'en' and len(message.content.split()) > 2):
       await message.channel.send(await getAIResponse(f"Zeg tegen {message.author.name } dat hij moet stoppen met engels praten en meer nederlands moet praten(houd het kort)"))
 
     userMessage = message.content.lower().split()
