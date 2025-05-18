@@ -51,8 +51,8 @@ class Client(discord.Client):
     language = detect(message.content)
     print(language)
     if(language  == 'en' and len(message.content.split()) > 3):
-      print(message.content)
-      await message.channel.send(await getAIResponse(f"Zeg tegen {message.author.name } dat hij moet stoppen met engels praten en meer nederlands moet praten(houd het kort)"))
+      print(f"{message.content}: English.")
+      await message.reply(await getAIResponse(f"Zeg tegen {message.author.name } dat hij moet stoppen met engels praten en meer nederlands moet praten(houd het kort)"))
 
     userMessage = message.content.lower().split()
     if findWordsInMessage(greets, userMessage) == False and self.lastUser != message.author.name:
