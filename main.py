@@ -49,14 +49,15 @@ class Client(discord.Client):
     # checks wurm
     #await checkSpecialCase(message)
     language = detect(message.content)
-    print(language)
-    if(language  == 'en' and len(message.content.split()) > 3):
-      print(f"{message.content}: English.")
-      await message.reply(await getAIResponse(f"Zeg tegen {message.author.name } dat hij moet stoppen met engels praten en meer nederlands moet praten(houd het kort)"))
 
     userMessage = message.content.lower().split()
     if findWordsInMessage(greets, userMessage) == False and self.lastUser != message.author.name:
       client.lastUser = ''
+      print(language)
+       #english checker
+      if(language  == 'en' and len(message.content.split()) > 3):
+        print(f"{message.content}: English.")
+        await message.reply(await getAIResponse(f"Zeg tegen {message.author.name } dat hij moet stoppen met engels praten en meer nederlands moet praten(houd het kort)"))
       return
     try:
       loop = asyncio.get_running_loop()
@@ -65,7 +66,7 @@ class Client(discord.Client):
     if loop == True and loop.is_running():
       task = asyncio.create_task(AIChat(message))
     else:
-      asyncio.run(AIChat(message)) # Safe to run normally
+      asyncio.run(AIChat(message)) # Safe to run normally  
 
 async def init(self):
   formatted_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
