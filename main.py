@@ -200,11 +200,11 @@ async def AIChat(messageInfo):
   print("\nDONE")
   if(i >= 1700):
     fullResponse += '...'
-    await messageInfo.channel.send(fullResponse)
+    await messageInfo.reply(fullResponse)
     await messageInfo.channel.send('(greetbots reactie was iets te lang)')
     print("\nexceeded word limit")
   else:
-    await messageInfo.channel.send(fullResponse)
+    await messageInfo.reply(fullResponse)
 
   client.prevResponse = fullResponse #update prev response
 
